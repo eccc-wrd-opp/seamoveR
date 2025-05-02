@@ -1,9 +1,11 @@
 Package: seamoveR
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Tools for Managing Waterbird Data on Movebank
+Version: 0.1.0
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Allison", "Patterson", "allison.patterson@ec.gc.ca", role = c("aut", "cre"))
+    person("Devin", "de Zwaan", "devin.dezwaan@ec.gc.ca", role = c("aut", "cre"))
+    person("Katharine", "Studholme", "katharine.studholme@ec.gc.ca", role = c("aut", "cre"))
+Description: This package is designed to facilitate archiving and maintaining ECCC waterbird tracking data on Movebank. It includes vinettes with step-by-step instructions for project creation and maintenance, as well as templates and guides to ensure standardization of column names and units. Functions are included to process raw tracking data, generate a standard project README file, and summarize multiple projects into a single-species PDF report. 
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
