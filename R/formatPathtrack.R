@@ -38,12 +38,15 @@ formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NUL
   for(i in files$filepath){
 
     tag <- dplyr::filter(files, filepath == i)
+
     tag.file <- read.csv(paste(data.dir, as.character(tag$filepath), sep = "/"),
                          header = F, skip = 5) |>
       dplyr::mutate(tag = tag$tag[1])
+
     datalist[[i]] <- tag.file
 
     print(i)
+
   }
 
   # Combine
@@ -101,7 +104,8 @@ formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NUL
 
   }
 
-  ## Format TDR data if present ##
+
+    ## Format TDR data if present ##
 
   # Create a table of the 'Press.txt' files and tag IDs
 
