@@ -1,0 +1,180 @@
+#' Prepare Pathtrack GPS(+TDR) data for import into Movebank
+#'
+#' @param data.dir Filepath to the directory containing all Pathtrack downloads
+#'  to be re-formatted. Data can be organized in subfolders by tag-id (Pathtrack default)
+#'  or otherwise as they will be read recursively. Files that are not Pathtrack
+#'  ownloads should not be located in this directory.
+#' @param outliers00 If TRUE, labels all 0,0 coordinates as outliers
+#'  (hidden from Movebank map). If FALSE, no outliers are labeled and the user
+#'  must define outliers themselves prior to Movebank import. This is the preferred
+#'  behaviour if the user wishes to identify cases of burrow use (re-assign some
+#'  0,0 coordinates to the colony) prior labelling outliers.
+#' @param out.dir Filepath to the directory in which to save .csv files of the
+#'  Movebank-formatted position data, and TDR data if applicable.
+#' @param spcd Four-letter species code to use when generating the .csv filename
+#'  for the Movebank-formatted position data, and TDR data if applicable.
+#' @param site Colony name/abbreviation (no spaces) to use when generating the
+#'  .csv filename for the Movebank-formatted position data, and TDR data if applicable.
+#'
+#' @details This function compiles the files obtained from Pathtrack GPS tracking
+#'  devices (.pos positional files and .txt TDR files) into a single file for
+#'  each data type, then reformats these files to comply with Movebank's required
+#'  field names and units.
+#'
+#' @return Returns an single object if only positional data are present, or a list of two objects if both positional and time-depth data are present. If out.dir, spcd, and site are specified, also saves Movebank-formatted data file(s) to the location specified.
+formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NULL, site = NULL) {
+
+  ## Format positional data ##
+
+  # Create a table of the '.pos' files and tag IDs
+
+  files <- data.frame(filepath = list.files(path = data.dir, pattern = "*.pos", recursive = T)) |>
+    dplyr::mutate(tag = stringr::str_extract(filepath, "(?<=Tag)[^/]+"))
+
+  # Import raw files, add column for tag name
+
+  datalist <- list()
+
+  for(i in files$filepath){
+
+    tag <- dplyr::filter(files, filepath == i)
+    tag.file <- read.csv(paste(data.dir, as.character(tag$filepath), sep = "/"),
+                         header = F, skip = 5) |>
+      dplyr::mutate(tag = tag$tag[1])
+    datalist[[i]] <- tag.file
+
+    print(i)
+  }
+
+  # Combine
+
+  pos <- do.call(rbind, datalist)
+
+  # Remove rownames
+
+  rownames(pos) <- NULL
+
+  # Pathtrack standard column names (not needed, ease of use)
+
+  colnames(pos) <- c("day", "month", "year", "hour", "minute", "second",
+                    "secondOfDay", "satellites", "lat", "long", "altitude",
+                    "clockOffset", "accuracy", "battery", "procParam1", "procParam2",
+                    "tag")
+
+  # Rename columns and format for Movebank
+  # Filter duplicates, sort
+
+  pos <- pos |>
+    dplyr::mutate(`sensor-type` = "GPS",
+                   timestamp = lubridate::dmy_hms(paste(paste(sprintf("%02d", day), sprintf("%02d", month), year, sep = "/"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":"), sep = " "), tz = 'UTC'),
+                   `gps-fix-type` = "3D",
+                   `gps:satellite-count` = satellites,
+                   `height-above-ellipsoid` = altitude, # meters
+                   `location-lat` = lat,
+                   `location-long` = long,
+                   `tag-voltage` = battery*1000, # mV not volts
+                   `tag-id` = tag) |>
+    dplyr::select('sensor-type', 'tag-id',
+                  timestamp, 'location-long', 'location-lat',
+                  'gps-fix-type', 'height-above-ellipsoid',
+                  'gps:satellite-count', 'tag-voltage') |>
+    dplyr::distinct(`tag-id`, timestamp, .keep_all = T) |>
+    dplyr::arrange(`tag-id`, timestamp)
+
+
+  # Label 0,0 coordinates as outliers, if indicated
+
+  if(outliers00 == T){
+
+    pos <- pos |>
+      dplyr::mutate(`import-marked-outlier` = ifelse(`location-long` == 0 & `location-lat` == 0, TRUE, FALSE),
+                    `import-marked-outlier-comment` = ifelse(`import-marked-outlier` == TRUE & `gps:satellite-count` == 0, "Pathtrack 0,0 coordinate, zero satellites",
+                                                             ifelse(`import-marked-outlier` == TRUE & `gps:satellite-count` > 0, "Pathtrack 0,0 coordinate, non-zero satellites", NA)))
+
+  }
+
+  # Save .csv if required info is provided
+
+  if(!is.null(out.dir) & !is.null(spcd) & !is.null(site)) {
+
+    write.csv(pos, paste0(out.dir, "/posData_", spcd, "_GPS_", site, ".csv"), row.names = F)
+
+  }
+
+  ## Format TDR data if present ##
+
+  # Create a table of the 'Press.txt' files and tag IDs
+
+  files <- data.frame(filepath = list.files(path = data.dir, pattern = "*Press.txt", recursive = T)) |>
+    dplyr::mutate(tag = stringr::str_extract(filepath, "(?<=Tag)[^/]+"))
+
+  if(nrow(files)>0){
+
+    # Import raw files, add column for tag name
+
+    datalist <- list()
+
+    for(i in files$filepath){
+
+      tag <- dplyr::filter(files, filepath == i)
+      tag.file <- read.table(paste(data.dir, as.character(tag$filepath), sep = "/"),
+                           header = F, skip = 5, sep = ",") |>
+        dplyr::mutate(tag = tag$tag[1])
+      datalist[[i]] <- tag.file
+
+      print(i)
+    }
+
+    # Combine
+
+    tdr <- do.call(rbind, datalist)
+
+    # Remove rownames
+
+    rownames(tdr) <- NULL
+
+    # Pathtrack standard column names (not needed, ease of use)
+
+    colnames(tdr) <- c("year", "month", "day", "hour", "minute", "second",
+                       "celcius", "pressurebar", "depth",
+                       "tag")
+
+    # Rename columns and format for Movebank
+    # Filter duplicates, sort
+
+    tdr <- tdr |>
+      dplyr::mutate(`sensor-type` = "TDR",
+                    timestamp = lubridate::dmy_hms(paste(paste(sprintf("%02d", day), sprintf("%02d", month), year, sep = "/"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":"), sep = " "), tz = 'UTC')) |>
+      dplyr::rename(`barometric-pressure` = pressurebar, # hPa (mbar)
+                    #depth = depth, # meters
+                    `external-temperature` = celcius,
+                    `tag-id` = tag) |>
+      dplyr::select('sensor-type', 'tag-id', timestamp,
+                    'barometric-pressure', 'depth', 'external-temperature') |>
+      dplyr::distinct(`tag-id`, timestamp, .keep_all = T) |>
+      dplyr::arrange(`tag-id`, timestamp)
+
+    # Save .csv if required info is provided
+
+    if(!is.null(out.dir) & !is.null(spcd) & !is.null(site)) {
+
+      write.csv(tdr, paste0(out.dir, "/tdrData_", spcd, "_GPS_", site, ".csv"), row.names = F)
+
+    }
+
+    # Save pos and tdr as a list
+    out_list <- list(
+      pos = pos,
+      tdr = tdr
+    )
+
+    return(out_list)
+
+  } else {
+
+    return(pos)
+
+  }
+
+}
+
