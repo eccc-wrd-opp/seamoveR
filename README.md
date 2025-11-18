@@ -3,5 +3,5 @@ This package is designed to facilitate archiving and maintaining ECCC waterbird 
 You can install the main version of PelagicMagic from
 [GitHub](https://github.com/) with:
 
-# install.packages("devtools")
+install.packages("devtools")
 devtools::install_github("ecc-wrd-opp/seamoveR")
