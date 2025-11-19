@@ -21,7 +21,11 @@
 #'  each data type, then reformats these files to comply with Movebank's required
 #'  field names and units.
 #'
-#' @return Returns an single object if only positional data are present, or a list of two objects if both positional and time-depth data are present. If out.dir, spcd, and site are specified, also saves Movebank-formatted data file(s) to the location specified.
+#' @return Returns an single object if only positional data are present, or a list
+#'  of two objects if both positional and time-depth data are present. If out.dir,
+#'  spcd, and site are specified, also saves Movebank-formatted data file(s) to
+#'  the location specified.
+#' @export
 formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NULL, site = NULL) {
 
   ## Format positional data ##
