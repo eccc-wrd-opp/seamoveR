@@ -34,7 +34,10 @@ for the Movebank-formatted position data, and TDR data if applicable.}
 .csv filename for the Movebank-formatted position data, and TDR data if applicable.}
 }
 \value{
-Returns an single object if only positional data are present, or a list of two objects if both positional and time-depth data are present. If out.dir, spcd, and site are specified, also saves Movebank-formatted data file(s) to the location specified.
+Returns an single object if only positional data are present, or a list
+of two objects if both positional and time-depth data are present. If out.dir,
+spcd, and site are specified, also saves Movebank-formatted data file(s) to
+the location specified.
 }
 \description{
 Prepare Pathtrack GPS(+TDR) data for import into Movebank
