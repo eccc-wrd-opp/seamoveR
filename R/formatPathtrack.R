@@ -75,16 +75,14 @@ formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NUL
 
   # Pathtrack standard column names (not needed, ease of use)
 
-  colnames(pos) <- c("day", "month", "year", "hour", "minute", "second",
+  colnames(pos) <- c("tag", "day", "month", "year", "hour", "minute", "second",
                     "secondOfDay", "satellites", "lat", "long", "altitude",
-                    "clockOffset", "accuracy", "battery", "procParam1", "procParam2",
-                    "tag")
+                    "clockOffset", "accuracy", "battery", "procParam1", "procParam2")
 
   # Rename columns and format for Movebank
   # Filter duplicates, sort
 
   pos <- pos |>
-    dplyr::mutate(across(c(day, month, year, hour, minute, second), as.numeric)) |>
     dplyr::mutate(`sensor-type` = "GPS",
                    timestamp = lubridate::dmy_hms(paste(paste(sprintf("%02d", day), sprintf("%02d", month), year, sep = "/"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":"), sep = " "), tz = 'UTC'),
                    `gps-fix-type` = "3D",
@@ -166,7 +164,6 @@ formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NUL
     # Filter duplicates, sort
 
     tdr <- tdr |>
-      dplyr::mutate(across(c(day, month, year, hour, minute, second), as.numeric)) |>
       dplyr::mutate(`sensor-type` = "TDR",
                     timestamp = lubridate::dmy_hms(paste(paste(sprintf("%02d", day), sprintf("%02d", month), year, sep = "/"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":"), sep = " "), tz = 'UTC')) |>
       dplyr::rename(`barometric-pressure` = pressurebar, # hPa (mbar)
