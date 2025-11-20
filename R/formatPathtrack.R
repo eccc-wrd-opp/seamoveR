@@ -166,7 +166,7 @@ formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NUL
 
     if(!is.null(out.dir) & !is.null(spcd) & !is.null(site)) {
 
-      write.csv(tdr, paste0(out.dir, "/tdrData_", spcd, "_GPS_", site, ".csv"), row.names = F)
+      write.csv(tdr, paste0(out.dir, "/tdrData_", spcd, "_GPS_", site, ".csv"), row.names = F, na = '')
 
     }
 
