@@ -84,7 +84,7 @@ formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NUL
 
   pos <- pos |>
     dplyr::mutate(`sensor-type` = "GPS",
-                   timestamp = lubridate::dmy_hms(paste(paste(sprintf("%02d", day), sprintf("%02d", month), year, sep = "/"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":"), sep = " "), tz = 'UTC'),
+                  timestamp = paste(paste(year, sprintf("%02d", month), sprintf("%02d", day), sep = "-"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":")),
                    `gps-fix-type` = "3D",
                    `gps:satellite-count` = satellites,
                    `height-above-ellipsoid` = altitude, # meters
@@ -165,7 +165,7 @@ formatPathtrack <- function(data.dir, outliers00 = T, out.dir = NULL, spcd = NUL
 
     tdr <- tdr |>
       dplyr::mutate(`sensor-type` = "TDR",
-                    timestamp = lubridate::dmy_hms(paste(paste(sprintf("%02d", day), sprintf("%02d", month), year, sep = "/"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":"), sep = " "), tz = 'UTC')) |>
+                    timestamp = paste(paste(year, sprintf("%02d", month), sprintf("%02d", day), sep = "-"), paste(sprintf("%02d", hour), sprintf("%02d", minute), sprintf("%02d", second), sep = ":"))) |>
       dplyr::rename(`barometric-pressure` = pressurebar, # hPa (mbar)
                     #depth = depth, # meters
                     `external-temperature` = celcius,
